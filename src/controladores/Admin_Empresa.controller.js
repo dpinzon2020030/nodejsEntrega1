@@ -13,7 +13,7 @@ const jwt = require('../servicios/jwt.tokens');
 ////////////////////////////////////////////////////////////////
 // UNIVERSAL
 ////////////////////////////////////////////////////////////////
-function Login(req, res) {
+function Login(req, res) {  
     var parametros = req.body;
 
     Empresa.findOne({ usuario: parametros.usuario }, (error, empresaEncontrada) => {
@@ -24,12 +24,14 @@ function Login(req, res) {
 
                 if (verificacionPassword) {
 
-                    if (parametros.Token == "true") {
+                    if (parametros.Token === "true") {
                         return res.status(200).send({ token: jwt.crearToken(empresaEncontrada) })
+                    }else{
+                        empresaEncontrada.password = undefined;
+                        return res.status(200).send({ empresa: empresaEncontrada })
                     }
                 } else {
-                    empresaEncontrada.password = undefined;
-                    return res.status(200).send({ empresa: empresaEncontrada })
+                   return res.status(500).send({ mensaje: "algo no cuadra"})
                 }
             })
 
@@ -218,27 +220,27 @@ function nuevoValorDesplegablePredeterminado(req, res) {
 
         } else if (parametros.rama == "proveedor" && logueado == "Empresa") {
 
-            if (parametros.nombre && parametros.telefono && parametros.distribuidora) {
+            if(parametros.nombre && parametros.telefono && parametros.distribuidora){
 
-                Proveedor.find({ nombreProveedor: parametros.nombre }, (error, proveedorEncontrado) => {
-                    if (proveedorEncontrado.length == 0) {
+            Proveedor.find({ nombreProveedor: parametros.nombre }, (error, proveedorEncontrado) => {
+                if (proveedorEncontrado.length == 0) {
 
-                        proveedorModelo.nombreProveedor = parametros.nombre;
-                        proveedorModelo.telefono = parametros.telefono;
-                        proveedorModelo.distribuidora = parametros.distribuidora;
+                    proveedorModelo.nombreProveedor = parametros.nombre;
+                    proveedorModelo.telefono = parametros.telefono;
+                    proveedorModelo.distribuidora = parametros.distribuidora;
 
-                        proveedorModelo.save((error, proveedorGuardado) => {
-                            if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-                            if (!proveedorGuardado) return res.status(500).send({ mensaje: "Error, no se agrego ningun nuevo municipio" });
+                    proveedorModelo.save((error, proveedorGuardado) => {
+                        if (error) return res.status(500).send({ mensaje: "Error de la petición" });
+                        if (!proveedorGuardado) return res.status(500).send({ mensaje: "Error, no se agrego ningun nuevo municipio" });
 
-                            return res.status(200).send({ Proveedor: proveedorGuardado, nota: "proveedor agregado exitosamente" });
-                        });
+                        return res.status(200).send({ Proveedor: proveedorGuardado, nota: "proveedor agregado exitosamente" });
+                    });
 
-                    } else {
-                        return res.status(500).send({ mensaje: "El proveedor ya se encuentra registrado" });
-                    }
-                });
-            }
+                } else {
+                    return res.status(500).send({ mensaje: "El proveedor ya se encuentra registrado" });
+                }
+            });
+        }
 
         } else if (parametros.rama == "municipio" || "proveedor" && logueado == "Admin") {
             return res.status(500).send({ error: "Acción disponible solo para Empresas" });
@@ -294,18 +296,18 @@ function registrarSucursal(req, res) {
 
         sucursalModelo.idEmpresa = idEmpresa;
 
-        Sucursal.find({ nombreSucursal: parametros.nombre }, (error, sucursalEncontrada) => {
-            if (error) return res.status(500).send({ mensaje: "Error2 de la petición" });
-            if (sucursalEncontrada.length == 0) {
+        Municipio.findOne({ nombreMunicipio: { $regex: parametros.municipio, $options: 'i' } }, (error, municipioEncontrado) => {
+            if (error) return res.status(500).send({ mensaje: "Error1 de la petición" });
+            if (!municipioEncontrado) return res.status(500).send({ mensaje: "Error, no se encontro este tipo empresa" });
 
-                sucursalModelo.nombreSucursal = parametros.nombre;
-                sucursalModelo.direccionSucursal = parametros.direccion;
+            sucursalModelo.municipio = municipioEncontrado.nombreMunicipio;
 
-                Municipio.findOne({ nombreMunicipio: { $regex: parametros.municipio, $options: 'i' } }, (error, municipioEncontrado) => {
-                    if (error) return res.status(500).send({ mensaje: "Error1 de la petición" });
-                    if (!municipioEncontrado) return res.status(500).send({ mensaje: "Error, no se encontro este tipo empresa" });
+            Sucursal.findOne({ nombreSucursal: parametros.nombre }, (error, sucursalEncontrada) => {
+                if (error) return res.status(500).send({ mensaje: "Error2 de la petición" });
+                if (sucursalEncontrada.length == 0) {
 
-                    sucursalModelo.municipio = municipioEncontrado.nombreMunicipio;
+                    sucursalModelo.nombreSucursal = sucursalEncontrada.nombreSucursal;
+                    sucursalModelo.direccionSucursal = parametros.direccion;
 
                     sucursalModelo.save((error, sucursalGuardada) => {
                         if (error) return res.status(500).send({ mensaje: "Error de la petición" });
@@ -313,15 +315,16 @@ function registrarSucursal(req, res) {
 
                         return res.status(200).send({ Sucursal: sucursalGuardada, nota: "empresa agregada exitosamente" });
                     });
-                })
-
-            } else {
-                return res.status(500).send({ mensaje: "El 'nombre' de esta sucursal ya se encuentra en uso" });
-            }
+                } else {
+                    return res.status(500).send({ mensaje: "El 'nombre' de esta sucursal ya se encuentra en uso" });
+                }
+            });
         })
+
     } else {
         return res.status(500).send({ mensaje: "Cumpla con los parametros obligatorios" });
     }
+
 }
 
 function editarSucursal(req, res) {

@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 
 var ProductoSucursalSchema = Schema({
     nombreProductoSucursal: String,
-    cantidadSucursal: Number,
+    stockSucursal: Number,
     cantidadVendidaSucursal: Number,
     idSucursal: String
 });

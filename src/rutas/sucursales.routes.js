@@ -13,7 +13,7 @@ api.post('/login', empresaController.Login);
 api.post('/nuevoAtributoPrede', md_autentificacion.Auth, empresaController.nuevoValorDesplegablePredeterminado);
 
 //CRUD EMPRESAS
-api.get('/empresas', empresaController.verEmpresas);
+api.get('/empresas', md_autentificacion.Auth ,empresaController.verEmpresas);
 api.post('/registrarEmpresa', md_autentificacion.Auth, empresaController.registrarEmpresa);
 api.put('/editarEmpresa/:idEmpresa', md_autentificacion.Auth, empresaController.editarEmpresa);
 api.delete('/eliminarEmpresa/:idEmpresa', md_autentificacion.Auth, empresaController.eliminarEmpresa);
